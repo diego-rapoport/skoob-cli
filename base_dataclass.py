@@ -1,8 +1,8 @@
+from dataclasses import dataclass, field
+from erros import NaoDeu200Erro
 from pathlib import Path
 import requests
-from dataclasses import dataclass, field
 from time import sleep
-from erros import NaoDeu200Erro
 
 HOME = Path.home()
 CACHE = HOME / '.cache/skoob-cli'
@@ -10,36 +10,69 @@ CACHE = HOME / '.cache/skoob-cli'
 if not CACHE.exists():
     Path.mkdir(CACHE)
 
+estantes = 'TODOS LIDO LENDO QUERO RELENDO ABANDONEI TENHO EBOOK FAVORITO DESEJADO TROCO EMPRESTEI META AVALIADO RESENHADO AUDIOBOOK'
+prateleira = {k: v for v, k in enumerate(estantes.split())}
+
 
 @dataclass
-class Estante:
+class Estante():
     """
-        Classe Estante com ID do usuário, limite de páginas pra baixar de uma vez do skoob, pagina atual de pesquisa na lista do skoob e livros salvos em formato de lista de dicionários.
+        Classe Estante do usuário do skoob dado sua ID.
+        Cada tipo de estante possui um número com um limite de livros baixados por vez e uma paginação.
+
+        id: Número do id do usuário do skoob
+        limite: Número limite de livros baixados de uma vez
+        pagina: Número da paginação da estante do skoob
+        shelf_id: Tipo da estante
+
+        shelf_ids:
+            0 - Todos
+            1 - Lido
+            2 - Lendo
+            3 - Quero Ler
+            4 - Relendo
+            5 - Abandonei
+            6 - Tenho
+            7 - Ebook/Digital
+            8 - Favorito
+            9 - Desejado
+            10 - Troco
+            11 - Emprestei
+            12 - Meta de Leitura
+            13 - Avaliado
+            14 - Resenhado
+            15 - AudioBook
+
     """
     id: int
     limite: int = field(default=36, compare=False, repr=False)
     pagina: int = field(default=1, compare=False, repr=False)
+    shelf_id: int = field(default=0, compare=False)
+    mais_livros: bool = field(default=False)
 
     def __post_init__(self):
         self.livros = []
         self.atualiza_dados()
-        self.total_livros = self.lista_livros_cru.get('paging').get('total')
 
     def atualiza_dados(self):
         """
             Função que pega as informações principais do usuário.
         """
-        self.url = f'https://www.skoob.com.br/v1/bookcase/books/{self.id}/shelf_id:0/page:{self.pagina}/limit:{self.limite}/'
+        self.url = f'https://www.skoob.com.br/v1/bookcase/books/{self.id}/shelf_id:{self.shelf_id}/page:{self.pagina}/limit:{self.limite}/'
         try:
             self.lista_livros_cru = self.confere_resposta(self.url)
         except NaoDeu200Erro:
-            self.livros = ['Erro na busca pelos livros.']
+            self.livros.append(f'Erro ao pegar livros página: {self.pagina}')
         else:
             # Pega o valor total de livros da estante no skoob
-            self.mais_livros = True if self.lista_livros_cru.get('paging').get(
-                'next_page') else False
+            if not self.lista_livros_cru.get('response'):
+                return f'Nenhum livro enontrado na estante {self.shelf_id}'
+            self.mais_livros = self.lista_livros_cru.get('paging').get(
+                'next_page')
             # Pega só os primeiros 36 livros(default)
             self.pega_livros()
+            self.total_livros = self.lista_livros_cru.get('paging').get(
+                'total')
 
     def pega_livros(self):
         for livro in self.lista_livros_cru.get('response'):
@@ -79,7 +112,7 @@ class Estante:
         if not self.mais_livros:
             return
         self.pagina += 1
-        self.pega_livros()
+        self.atualiza_dados()
 
 
 @dataclass
@@ -119,4 +152,4 @@ class Livro:
     capa: Capa
 
     def __str__(self):
-        return f'{self.titulo_br if self.titulo_br else self.titulo} de {self.autor} - {self.ano}'
+        return f'{self.titulo_br if self.titulo_br else self.titulo} - {self.autor} ({self.ano})'
