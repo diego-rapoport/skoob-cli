@@ -84,6 +84,3 @@ def procurar(pagina, nome):
 
 
 cli = click.CommandCollection(sources=[base, procura])
-
-if __name__ == '__main__':
-    cli()
