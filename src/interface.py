@@ -1,8 +1,8 @@
 from pathlib import Path
 import click
-from config import cria_config, confere_config, CONFFILE
-from base_dataclass import Estante, prateleira
-from busca import buscar, pega_info_livros
+from .config import cria_config, confere_config, CONFFILE
+from .base_dataclass import Estante, prateleira
+from .busca import buscar, pega_info_livros
 
 
 @click.group(invoke_without_command=True)

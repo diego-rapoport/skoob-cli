@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from erros import NaoDeu200Erro
+from .erros import NaoDeu200Erro
 from pathlib import Path
 import requests
 from time import sleep
