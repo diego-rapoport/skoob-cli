@@ -44,7 +44,9 @@ def livros(estante, config, id):
     else:
         conf = confere_config(Path(config))
 
-    if estante.upper() not in prateleira.keys():
+    try:
+        shelf = prateleira[estante.upper()]
+    except KeyError:
         sep = '\n'
         click.secho(f'"{estante}" não encontrada como estante válida.\n',
                     fg='red',
@@ -53,13 +55,30 @@ def livros(estante, config, id):
             f'Tente uma das opções abaixo:\n{sep.join(prateleira.keys()).lower()}'
         )
         return 1
-    shelf = prateleira.get(estante.upper())
-    estante = Estante(**conf, shelf_id=shelf)
-    while estante.mais_livros:
-        estante.pega_mais_livros()
-    click.echo(f'Total de livros: {len(estante.livros)}')
-    for indice, livro in enumerate(estante.livros, start=1):
-        click.echo(f'{indice} - {livro}')
+    else:
+        estante = Estante(**conf, shelf_id=shelf)
+        while estante.mais_livros:
+            estante.pega_mais_livros()
+        click.echo(f'Total de livros: {len(estante.livros)}')
+        for indice, livro in enumerate(estante.livros, start=1):
+            click.echo(f'{indice} - {livro}')
+
+    # if estante.upper() not in prateleira.keys():
+    #     sep = '\n'
+    #     click.secho(f'"{estante}" não encontrada como estante válida.\n',
+    #                 fg='red',
+    #                 bold=True)
+    #     click.echo(
+    #         f'Tente uma das opções abaixo:\n{sep.join(prateleira.keys()).lower()}'
+    #     )
+    #     return 1
+    # shelf = prateleira.get(estante.upper())
+    # estante = Estante(**conf, shelf_id=shelf)
+    # while estante.mais_livros:
+    #     estante.pega_mais_livros()
+    # click.echo(f'Total de livros: {len(estante.livros)}')
+    # for indice, livro in enumerate(estante.livros, start=1):
+    #     click.echo(f'{indice} - {livro}')
 
 
 @click.group()

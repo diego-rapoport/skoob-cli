@@ -3,6 +3,7 @@ from .erros import NaoDeu200Erro
 from pathlib import Path
 import requests
 from time import sleep
+from typing import Optional, NoReturn
 
 HOME = Path.home()
 CACHE = HOME / '.cache/skoob-cli'
@@ -15,7 +16,7 @@ prateleira = {k: v for v, k in enumerate(estantes.split())}
 
 
 @dataclass
-class Estante():
+class Estante:
     """
         Classe Estante do usuário do skoob dado sua ID.
         Cada tipo de estante possui um número com um limite de livros baixados por vez e uma paginação.
@@ -50,11 +51,11 @@ class Estante():
     shelf_id: int = field(default=0, compare=False)
     mais_livros: bool = field(default=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.livros = []
         self.atualiza_dados()
 
-    def atualiza_dados(self):
+    def atualiza_dados(self) -> Optional[str]:
         """
             Função que pega as informações principais do usuário.
         """
@@ -74,7 +75,7 @@ class Estante():
             self.total_livros = self.lista_livros_cru.get('paging').get(
                 'total')
 
-    def pega_livros(self):
+    def pega_livros(self) -> None:
         for livro in self.lista_livros_cru.get('response'):
             edicao = livro.get('edicao')
             id = edicao.get('livro_id')
@@ -91,11 +92,11 @@ class Estante():
 
     def deu_erro(self, tipo):
         """
-            Função que chama o erro para operações ternárias.
+            Função que chama o erro para operações ternárias e f-strings.
         """
         raise tipo
 
-    def confere_resposta(self, url):
+    def confere_resposta(self, url: str) -> Optional[NoReturn]:
         """
             Verifica se o status da url parâmetro é 200.
             Caso não seja, retorna um erro.
@@ -104,7 +105,7 @@ class Estante():
         return raw.json() if raw.status_code == 200 else self.deu_erro(
             NaoDeu200Erro)
 
-    def pega_mais_livros(self):
+    def pega_mais_livros(self) -> None:
         """
             Função que confere se existem mais livros a serem coletados no skoob.
             Caso existam, salva no Usuário.
@@ -125,15 +126,15 @@ class Capa:
     titulo: str
 
     # TODO: Fazer de forma async
-    def baixa_capa(self):
+    def baixa_capa(self) -> requests.models.Response:
         sleep(1)  # Pra não sobrecarregar o servidor
         download = requests.get(self.link)
         return download
 
-    def cache_capa(self):
-        '''
+    def cache_capa(self) -> None:
+        """
             Salva a imagem da capa do livro em cache.
-        '''
+        """
         imagem = self.baixa_capa()
         with open(f'{CACHE}/{self.titulo}.jpg', 'wb') as arq:
             arq.write(imagem.content)
