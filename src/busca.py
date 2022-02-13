@@ -1,10 +1,9 @@
 from parsel import Selector
 import re
 import requests
-# from typing import
 
 
-def buscar(busca: str, pagina: int) -> str:
+def buscar(busca: str, pagina: int = 1) -> str:
     endpoint = f'https://www.skoob.com.br/livro/lista/busca:{busca}/tipo:geral/mpage:{pagina}'
     resposta = requests.get(endpoint)
     return resposta.text
